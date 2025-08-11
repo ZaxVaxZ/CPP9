@@ -2,12 +2,15 @@
 #define BITCOINEXCHANGE_HPP
 
 #include <iostream>
+#include <fstream>
+#include <algorithm>
 
 typedef std::string str;
 
 class BitcoinExchange
 {
 	private:
+		str	_db_file, _in_file;
 		std::map<str,float> database;
 
 		bool	validFileExtension(str filename, str extension) const;
@@ -19,15 +22,13 @@ class BitcoinExchange
 
 	public:
 		BitcoinExchange();
-		BitcoinExchange(str database);
-		BitcoinExchange(str database, str inputfile);
+		BitcoinExchange(str db_file);
+		BitcoinExchange(str db_file, str in_file);
 		BitcoinExchange(const BitcoinExchange &copy);
 		~BitcoinExchange();
 
-		void	load(std::ifstream &ifs);
-
-		void	parseInput     (str inputfile)   ;
-		void	parseDatabase  (str database)    ;
+		void	parseInput     (str in_file)     ;
+		void	parseDatabase  (str db_file)     ;
 		float	getExchangeRate(str date)	const;
 
 		BitcoinExchange &operator =(const BitcoinExchange &copy);

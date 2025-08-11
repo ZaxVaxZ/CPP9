@@ -1,6 +1,7 @@
 #include <iostream>
-#include <fstream>
 #include "BitcoinExchange.hpp"
+
+#define DATABASE "data.csv"
 
 typedef std::string str;
 
@@ -26,12 +27,6 @@ int main(int ac, char **av)
 		std::cerr << "Error: could not open file.\n";
 		return (1);
 	}
-	std::ifstream ifs(av[1]);
-	if (!ifs.is_open())
-	{
-		std::cerr << "Error: could not open file.\n";
-		return (1);
-	}
-	ifs.close();
+	
 	return (0);
 }

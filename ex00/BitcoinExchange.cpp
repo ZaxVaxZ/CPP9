@@ -1,29 +1,31 @@
 #include "BitcoinExchange.hpp"
 
-BitcoinExchange::BitcoinExchange()
+BitcoinExchange::BitcoinExchange(): _db_file(), _in_file(), database()
 {
 	
 }
 
-BitcoinExchange::BitcoinExchange(str database): database()
+BitcoinExchange::BitcoinExchange(str db_file): _db_file(db_file), _in_file(), database()
 {
-	if (!validFileExtension(database, ".csv"))
-		throw std::runtime_error("Invalid file extension! Expected extension (.csv)");
-
+	if (!this->validFileExtension(db_file, ".csv"))
+		throw std::runtime_error("BTC -> Invalid file extension in `" + db_file + "`! Expected extension (.csv)");
+	this->parseDatabase(db_file);
 }
 
-BitcoinExchange::BitcoinExchange(str database, str inputfile): database()
+BitcoinExchange::BitcoinExchange(str db_file, str in_file): _db_file(db_file), _in_file(in_file), database()
 {
-	if (!validFileExtension(database, ".csv"))
-		throw std::runtime_error("Invalid file extension! Expected extension (.csv)");
-	if (!validFileExtension(inputfile, ".txt"))
-		throw std::runtime_error("Invalid file extension! Expected extension (.txt)");
-
+	if (!this->validFileExtension(db_file, ".csv"))
+		throw std::runtime_error("BTC -> Invalid file extension in `" + db_file + "`! Expected extension (.csv)");
+	if (!this->validFileExtension(in_file, ".txt"))
+		throw std::runtime_error("BTC -> Invalid file extension in `" + in_file + "`! Expected extension (.txt)");
+	parseDatabase(db_file);
+	parseInput(in_file);
 }
 
-BitcoinExchange::BitcoinExchange(const BitcoinExchange &copy): database(copy.database)
+BitcoinExchange::BitcoinExchange(const BitcoinExchange &copy): _db_file(copy._db_file), _in_file(copy._in_file), database(copy.database)
 {
-	
+	parseDatabase(db_file);
+	parseInput(in_file);
 }
 
 bool BitcoinExchange::validFileExtension(str filename, str extension) const
@@ -31,33 +33,6 @@ bool BitcoinExchange::validFileExtension(str filename, str extension) const
 	if (filename.length() < extension.length())
 		return false;
 	return (filename.substr(filename.length() - extension.length(), extension.length()) == extension);
-}
-
-void BitcoinExchange::parseInput(str inputfile)
-{
-	if (!validFileExtension(inputfile, ".txt"))
-		throw std::runtime_error("Invalid file extension in (" + inputfile + ")! Expected extension (.txt)");
-	if (database.empty())
-	{
-		std::cout << "BTC -> No Database is loaded in this object!";
-		return ;
-	}
-}
-
-void BitcoinExchange::parseDatabase(str database)
-{
-	if (!validFileExtension(database, ".csv"))
-		throw std::runtime_error("Invalid file extension (" + database + ")! Expected extension (.csv)");
-	if (!database.empty())
-	{
-		std::cout << "BTC -> A Database is already loaded in this object!";
-		return ;
-	}
-}
-
-BitcoinExchange::BitcoinExchange(const BitcoinExchange &copy)
-{
-	(void) copy;	
 }
 
 bool BitcoinExchange::validString(str &s)
@@ -77,10 +52,10 @@ void BitcoinExchange::trim(str &line)
 
 	for (i = 0; i < line.length() && line[i] == ' '; i++);
 	for (j = i; j < line.length() && line[j] != ' '; j++);
-	line = line.substring(i, line.length() - i);
+	line = line.substring(i, j - i);
 }
 
-bool BitcoinExchange::parseDate (str &line, str &s)
+bool BitcoinExchange::parseDate(str &line, str &s)
 {
 	if (!validString(line))
 		return false;
@@ -120,64 +95,57 @@ bool BitcoinExchange::parseFloat(str &line, float &f)
 	}
 }
 
-str *BitcoinExchange::splitLine(str &line)
+void BitcoinExchange::parseInput(str in_file)
 {
-	int	wc = 1;
-	for (int i = 0; i < line.length(); i++)
-		wc += (line[i] == '|');
-	str *ret = new str[wc];
-	int	k;
-	for (int i = 0; i < line.length(); i++)
-	{
-		if (line[i] == '|')
-		{
-			k++;
-			continue ;
-		}
-		ret[k] += line[i];
-	}
-	return ret;
+	if (!validFileExtension(in_file, ".txt"))
+		throw std::runtime_error("BTC -> Invalid file extension in `" + inputfile + "`! Expected extension (.txt)");
+	this->_in_file = in_file;
+	if (this->_db_file == "")
+		throw std::runtime_error("BTC -> No database loaded!");
+	if (this->database.empty())
+		parseDatabase(this->_db_file);
+	
 }
 
-void BitcoinExchange::load(std::ifstream &ifs)
+void BitcoinExchange::parseDatabase(str db_file)
 {
 	float	f;
 	bool	fail;
-	str		line;
-	str		date;
-	str		*vals;
+	str		line, date, amount;
 
-	fail = false;
+	if (!validFileExtension(db_file, ".csv"))
+		throw std::runtime_error("Invalid file extension (" + db_file + ")! Expected extension (.csv)");
+	if (!database.empty())
+		database.clear();
+	this->_db_file = db_file;
+	std::ifstream	ifs(db_file);
 	if (!ifs.is_open())
-		return ;
+		throw std::runtime_error("BTS -> Could not open file");
+	fail = false;
 	while (std::getline(ifs, line))
 	{
+		fail = (fail || std::count(line.begin(), line.end(), '|') > 1 || line[0] == '|' || line[line.length() - 1] == '|');
 		if (fail)
-		{
-			delete line;
-			continue;
-		}
-		vals = splitLine(line);
-		if (vals.length() != 2)
-		{
-			fail = true;
-			delete vals;
 			continue ;
-		}
-		if (!parseDate(vals[0], date) || !parseFloat(vals[1], f))
-			fail = true;
-		delete vals;
+		date = line.substr(0, line.find('|'));
+		amount = line.substr(line.find('|') + 1);
+		fail = (!parseDate(date, date) || !parseFloat(amount, f));
 	}
 	ifs.close();
 }
 
 BitcoinExchange &BitcoinExchange::operator =(const BitcoinExchange &copy)
 {
-	(void) copy;
+	if (this != &copy)
+	{
+		this->_db_file = copy._db_file;
+		this->_in_file = copy._in_file;
+		this->database = copy.database;
+	}
 	return *this;
 }
 
 BitcoinExchange::~BitcoinExchange()
 {
-	
+	this->database.clear();
 }
