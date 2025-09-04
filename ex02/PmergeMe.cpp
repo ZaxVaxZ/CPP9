@@ -12,14 +12,12 @@
 
 #include "PmergeMe.hpp"
 
-PmergeMe::PmergeMe()
+PmergeMe::PmergeMe(): vector_time(0), list_time(0)
 {
-	vector_time = 0;
-	list_time = 0;
-	comparisonCount = 0;
+	
 }
 
-PmergeMe::PmergeMe(const PmergeMe& obj)
+PmergeMe::PmergeMe(const PmergeMe& obj): vector_time(0), list_time(0)
 {
 	*this = obj;
 }
@@ -44,27 +42,8 @@ void	PmergeMe::fillContainers(char** args)
 void	PmergeMe::printNumbers()
 {
 	for (std::vector<int>::iterator it = this->vector.begin(); it != this->vector.end(); it++)
-	{
 		std::cout << (*it) << " ";
-	}
 	std::cout << "\n";
-}
-
-unsigned int		PmergeMe::getComparisonCount() const
-{
-	return (comparisonCount);
-}
-
-unsigned int	PmergeMe::compareNumbers(int val1, int val2)
-{
-	comparisonCount++;
-	return (val1 < val2);
-}
-
-long	PmergeMe::getJacobsthal(int n)
-{
-	return n;
-		// return (PmergeMe::sequence[n]);
 }
 
 int	PmergeMe::binaryInsertSearch(int _toInsert, size_t capIndex, std::vector<int>& searchVector)
@@ -79,7 +58,6 @@ int	PmergeMe::binaryInsertSearch(int _toInsert, size_t capIndex, std::vector<int
 			high = middle - 1;
 		else
 			low = middle + 1;
-		comparisonCount++;
 	}
 	return (low);
 }
@@ -100,11 +78,14 @@ void	PmergeMe::positionPendElements(std::vector<int>& unsorted_winners, std::vec
 		pendChain.push_back(losers[losers.size() - 1]);
 }
 
+
+
 void	PmergeMe::insertPend(std::vector<int>& pendChain)
 {
 	int					jacobsthalIndex = 3;
-	unsigned int		currentJacobsthal = getJacobsthal(jacobsthalIndex);
-	unsigned int		prevJacobsthal = getJacobsthal(jacobsthalIndex - 1);
+	long				*jacobsthal = getSequence(65);
+	unsigned int		currentJacobsthal = jacobsthal[jacobsthalIndex];
+	unsigned int		prevJacobsthal = jacobsthal[jacobsthalIndex - 1];
 	std::vector<int>	winners = vector;
 	size_t				mainChainSize = vector.size();
 
@@ -117,11 +98,11 @@ void	PmergeMe::insertPend(std::vector<int>& pendChain)
 	{
 		if (currentJacobsthal == prevJacobsthal)
 		{
-			prevJacobsthal = getJacobsthal(jacobsthalIndex);
-			currentJacobsthal = getJacobsthal(++jacobsthalIndex);
+			prevJacobsthal = jacobsthal[jacobsthalIndex];
+			currentJacobsthal = jacobsthal[++jacobsthalIndex];
 		}
 		int _toInsert = 0;
-		if (pendChain.size() - 1 < static_cast<unsigned int>(getJacobsthal(jacobsthalIndex)))
+		if (pendChain.size() - 1 < static_cast<unsigned int>(jacobsthal[jacobsthalIndex]))
 			_toInsert = pendChain[i--];
 		else
 			_toInsert = pendChain[currentJacobsthal - 1];
@@ -136,6 +117,7 @@ void	PmergeMe::insertPend(std::vector<int>& pendChain)
 		vector.insert(vector.begin() + binaryInsertSearch(_toInsert, capIndex, vector), _toInsert);
 		currentJacobsthal--;
 	}
+	delete [] jacobsthal;
 }
 
 void	PmergeMe::printList(std::list<int>& print)
@@ -183,7 +165,6 @@ int	PmergeMe::binaryInsertSearch(int _toInsert, size_t capIndex, std::list<int>&
 			high = middle - 1;
 		else
 			low = middle + 1;
-		comparisonCount++;
 	}
 	return (low);
 }
@@ -205,8 +186,9 @@ void	PmergeMe::positionPendElements(std::list<int>& unsorted_winners, std::list<
 void	PmergeMe::insertPend(std::list<int>& pendChain)
 {
 	int					jacobsthalIndex = 3;
-	unsigned int		currentJacobsthal = getJacobsthal(jacobsthalIndex);
-	unsigned int		prevJacobsthal = getJacobsthal(jacobsthalIndex - 1);
+	long				*jacobsthal = getSequence(65);
+	unsigned int		currentJacobsthal = jacobsthal[jacobsthalIndex];
+	unsigned int		prevJacobsthal = jacobsthal[jacobsthalIndex - 1];
 	std::list<int>		winners = this->list;
 	size_t				mainChainSize = list.size();
 
@@ -219,11 +201,11 @@ void	PmergeMe::insertPend(std::list<int>& pendChain)
 	{
 		if (currentJacobsthal == prevJacobsthal)
 		{
-			prevJacobsthal = getJacobsthal(jacobsthalIndex);
-			currentJacobsthal = getJacobsthal(++jacobsthalIndex);
+			prevJacobsthal = jacobsthal[jacobsthalIndex];
+			currentJacobsthal = jacobsthal[++jacobsthalIndex];
 		}
 		std::list<int>::iterator pendIterator = pendChain.begin();
-		if (pendChain.size() - 1 < static_cast<unsigned int>(getJacobsthal(jacobsthalIndex)))
+		if (pendChain.size() - 1 < static_cast<unsigned int>(jacobsthal[jacobsthalIndex]))
 			std::advance(pendIterator, i--);
 		else
 			std::advance(pendIterator, currentJacobsthal - 1);
@@ -240,6 +222,7 @@ void	PmergeMe::insertPend(std::list<int>& pendChain)
 		list.insert(advancedIterator(list.begin(), binaryInsertSearch(_toInsert, capIndex, this->list)), _toInsert);
 		currentJacobsthal--;
 	}
+	delete [] jacobsthal;
 }
 
 long *PmergeMe::getSequence(unsigned int n) const
@@ -260,14 +243,14 @@ long *PmergeMe::getSequence(unsigned int n) const
 
 void	PmergeMe::sortUsingVector()
 {
-	struct timeval	t;
-	long long		micro_seconds;
+	struct timeval		t;
+	unsigned long long	micro_seconds;
 
 	gettimeofday(&t, NULL);
-	micro_seconds = (t.tv_sec * 1000) + t.tv_usec;
+	micro_seconds = t.tv_sec * 1000ull + t.tv_usec;
 	sortVector();
 	gettimeofday(&t, NULL);
-	this->vector_time = t.tv_sec * 1000 + t.tv_usec - micro_seconds;
+	this->vector_time = t.tv_sec * 1000ull + t.tv_usec - micro_seconds;
 }
 
 long long	PmergeMe::getVectorTime() const
@@ -281,7 +264,7 @@ void	PmergeMe::sortVector()
 		return ;
 	if (this->vector.size() == 2)
 	{
-		if (compareNumbers(vector[0], vector[1]) == false)
+		if (vector[0] > vector[1])
 			std::swap(vector[0], vector[1]);
 		return ;
 	}
@@ -297,7 +280,7 @@ void	PmergeMe::sortVector()
 			losers.push_back(*it);
 			break ;
 		}
-		if (compareNumbers((*it), *(it + 1)))
+		if ((*it) < *(it + 1))
 		{
 			losers.push_back(*it);
 			winners.push_back(*(it + 1));
@@ -319,13 +302,14 @@ void	PmergeMe::sortVector()
 
 void	PmergeMe::sortUsingList()
 {
-	struct timeval	t;
+	struct timeval		t;
+	unsigned long long	micro_seconds;
 
 	gettimeofday(&t, NULL);
-	list_time = (t.tv_sec * 1000) + (t.tv_usec / 1000);
+	micro_seconds = t.tv_sec * 1000ull + t.tv_usec;
 	sortList();
 	gettimeofday(&t, NULL);
-	list_time = ((t.tv_sec * 1000) + (t.tv_usec / 1000)) - list_time;
+	this->list_time = t.tv_sec * 1000ull + t.tv_usec - micro_seconds;
 }
 
 long long	PmergeMe::getListTime() const
@@ -339,7 +323,7 @@ void	PmergeMe::sortList()
 		return ;
 	if (this->list.size() == 2)
 	{
-		if (compareNumbers(list.back(), list.front()))
+		if (list.back() < list.front())
 			std::swap(list.front(), list.back());
 		return ;
 	}
@@ -357,7 +341,7 @@ void	PmergeMe::sortList()
 			losers.push_back(*curr);
 			break ;
 		}
-		if (compareNumbers((*curr), *(it)))
+		if ((*curr) < *(it))
 		{
 			losers.push_back(*curr);
 			winners.push_back(*it);
@@ -381,7 +365,8 @@ PmergeMe	&PmergeMe::operator=(const PmergeMe& obj)
 {
 	this->vector = obj.vector;
 	this->list = obj.list;
-	this->comparisonCount = obj.comparisonCount;
+	this->vector_time = obj.vector_time;
+	this->list_time = obj.list_time;
 	return (*this);
 }
 

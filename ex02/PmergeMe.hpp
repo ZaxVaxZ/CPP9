@@ -28,17 +28,13 @@
 class	PmergeMe
 {
 	private:
-		unsigned int			comparisonCount;
 		std::vector<int>		vector;
 		std::list<int>			list;
 		std::set<int>			set;
-		long long				vector_time;
-		long long				list_time;
+		unsigned long long		vector_time, list_time;
 
-		unsigned int	compareNumbers(int val1, int val2);
 		void			sortVector();
 		void			sortList();
-		long			getJacobsthal(int n);
 
 		// vector utility
 		int		binaryInsertSearch(int _toInsert, size_t capIndex, std::vector<int>& searchVector);
@@ -54,23 +50,23 @@ class	PmergeMe
 		void	positionPendElements(std::list<int>& unsorted_winners, std::list<int>& sorted_winners, 
 										std::list<int>& losers, std::list<int>& pendChain);
 		void	insertPend(std::list<int>& pendChain);
+	
 	public:
 		PmergeMe();
 		~PmergeMe();
 		PmergeMe(const PmergeMe& obj);
-		PmergeMe&	operator=(const PmergeMe& obj);
 
-		void	fillContainers(char** args);
-		int		size();
-		
-		long long		getVectorTime() const;
-		long long		getListTime() const;
-		unsigned int	getComparisonCount() const;
+		void			fillContainers(char** args);
+		int				size();
 		void			sortUsingVector();
 		void			sortUsingList();
 		void			printNumbers();
 		void			printInternalList();
 		long			*getSequence(unsigned int n) const;
+		long long		getVectorTime() const;
+		long long		getListTime() const;
+	
+		PmergeMe&	operator=(const PmergeMe& obj);
 };
 
 #endif

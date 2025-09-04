@@ -3,16 +3,21 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <cstdlib>
 #include <algorithm>
+#include <map>
 
 typedef std::string str;
 
 class BitcoinExchange
 {
 	private:
-		str	_db_file, _in_file;
-		std::map<str,float> database;
+		
+		str						_db_file, _in_file;
+		std::map<str, float>	database;
 
+		bool	isValidDate(str &date) const;
 		bool	validFileExtension(str filename, str extension) const;
 		bool	validString(str &s);
 		bool	parseDate (str &line, str &s);

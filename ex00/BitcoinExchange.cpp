@@ -8,24 +8,22 @@ BitcoinExchange::BitcoinExchange(): _db_file(), _in_file(), database()
 BitcoinExchange::BitcoinExchange(str db_file): _db_file(db_file), _in_file(), database()
 {
 	if (!this->validFileExtension(db_file, ".csv"))
-		throw std::runtime_error("BTC -> Invalid file extension in `" + db_file + "`! Expected extension (.csv)");
-	this->parseDatabase(db_file);
+		throw std::runtime_error("Error: Invalid file extension in `" + db_file + "`! Expected extension (.csv)");
+	parseDatabase(db_file);
 }
 
 BitcoinExchange::BitcoinExchange(str db_file, str in_file): _db_file(db_file), _in_file(in_file), database()
 {
 	if (!this->validFileExtension(db_file, ".csv"))
-		throw std::runtime_error("BTC -> Invalid file extension in `" + db_file + "`! Expected extension (.csv)");
-	if (!this->validFileExtension(in_file, ".txt"))
-		throw std::runtime_error("BTC -> Invalid file extension in `" + in_file + "`! Expected extension (.txt)");
+		throw std::runtime_error("Error: Invalid file extension in `" + db_file + "`! Expected extension (.csv)");
 	parseDatabase(db_file);
 	parseInput(in_file);
 }
 
 BitcoinExchange::BitcoinExchange(const BitcoinExchange &copy): _db_file(copy._db_file), _in_file(copy._in_file), database(copy.database)
 {
-	parseDatabase(db_file);
-	parseInput(in_file);
+	parseDatabase(copy._db_file);
+	parseInput(copy._in_file);
 }
 
 bool BitcoinExchange::validFileExtension(str filename, str extension) const
@@ -35,103 +33,210 @@ bool BitcoinExchange::validFileExtension(str filename, str extension) const
 	return (filename.substr(filename.length() - extension.length(), extension.length()) == extension);
 }
 
-bool BitcoinExchange::validString(str &s)
+bool BitcoinExchange::isValidDate(str &date) const
 {
-	int	i, j, k;
+	int		year, month, day;
+	char	dash;
 
-	for (i = 0; i < s.length() && s[i] == ' '; i++);
-	for (j = i; j < s.length() && s[j] != ' '; j++);
-	for (     ; j < s.length() && s[j] == ' '; j++);
-	return (i != s.length() && s[i] != '\n' && (j == s.length() 
-		|| (j == s.length() - 1 && line[j] == '\n')));
-}
-
-void BitcoinExchange::trim(str &line)
-{
-	int	i, j;
-
-	for (i = 0; i < line.length() && line[i] == ' '; i++);
-	for (j = i; j < line.length() && line[j] != ' '; j++);
-	line = line.substring(i, j - i);
+	if (date.length() < 10 || date[4] != '-' || date[7] != '-')
+		return false;
+	std::stringstream ss(date);
+	ss >> year >> dash >> month >> dash >> day; // >> is type aware, it knows wat goes where
+	if (ss.fail())//non-numeric or xtra
+		return false;
+	if (year < 1970 || year > 2025)
+		return false;
+	if (month < 1 || month > 12 || day < 1 || day > 31)// within range
+		return false;
+	if ((month == 4 || month == 6 || month == 9 || month == 11) && day > 30) //april, june, september, november
+		return false;
+	if (month == 2)
+	{
+		if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) 
+			return day <= 29; // Leap year
+		else
+			return day <= 28; // Non-leap year
+	}
+	return true;
 }
 
 bool BitcoinExchange::parseDate(str &line, str &s)
 {
-	if (!validString(line))
-		return false;
-	skipWhitespace(line);
 	if (line.length() < 10)
-		return false;
+		throw std::runtime_error("Error: Bad date input " + line);
 	for (int i = 0; i < 4; i++)
 	{
 		s[i] = line[i];
 		if (!std::isdigit(line[i]))
-			return false;
+			throw std::runtime_error("Error: Bad date input " + line);
 	}
-	if (line[5] != '-')
-		return false;
-	for (int i = 0; i < 2; i++)
+	if (line[4] == '/')
+		line[4] = '-';
+	if (line[4] != '-')
+		throw std::runtime_error("Error: Bad date input " + line);
+	s[4] = '-';
+	for (int i = 5; i < 7; i++)
 	{
-		s[i + 6] = line[i + 6];
-		if (!std::isdigit(line[i + 6]))
-			return false;
+		s[i] = line[i];
+		if (!std::isdigit(line[i]))
+			throw std::runtime_error("Error: Bad date input " + line);
 	}
-	if (line[8] != '-')
-		return false;
-	for (int i = 0; i < 2; i++)
+	if (line[7] == '/')
+		line[7] = '-';
+	if (line[7] != '-')
+		throw std::runtime_error("Error: Bad date input " + line);
+	s[7] = '-';
+	for (int i = 8; i < 10; i++)
 	{
-		s[i + 9] = line[i + 9];
-		if (!std::isdigit(line[i + 9]))
-			return false;
+		s[i] = line[i];
+		if (!std::isdigit(line[i]))
+			throw std::runtime_error("Error: Bad date input " + line);
 	}
 	return true;
 }
 
 bool BitcoinExchange::parseFloat(str &line, float &f)
 {
-	try
+	unsigned int	i;
+	bool			dec = false, negative = false;
+
+	for (i = 0; i < line.length(); i++)
 	{
-		f = std::stod(line)
+		if (line[i] != ' ')
+			break ;
 	}
+	if (line[i] == '-')
+	{
+		i++;
+		negative = true;
+	}
+	if (i > 0)
+		line = line.substr(i);
+	for (i = 0; i < line.length(); i++)
+	{
+		if (line[i] == '.')
+		{
+			if (dec || i == line.length() - 1 || !i)
+				throw std::runtime_error("Error: Second value non-numeric");
+			dec = true;
+			continue ;
+		}
+		if (!std::isdigit(line[i]))
+			throw std::runtime_error("Error: Second value non-numeric");
+	}
+	if (negative)
+		throw std::runtime_error("Error: Not a positive number");
+	if (line.length() > 10 || std::stoll(line) > INT_MAX)
+		throw std::runtime_error("Error: Too large a number");
+	f = std::atof(line.c_str());
+	return true;
 }
 
 void BitcoinExchange::parseInput(str in_file)
 {
-	if (!validFileExtension(in_file, ".txt"))
-		throw std::runtime_error("BTC -> Invalid file extension in `" + inputfile + "`! Expected extension (.txt)");
+	float	f;
+	bool	fail, skip = true;
+	str		line, date, amount;
+	std::map<str, float>::iterator it;
+
 	this->_in_file = in_file;
 	if (this->_db_file == "")
-		throw std::runtime_error("BTC -> No database loaded!");
+		throw std::runtime_error("Error: No database loaded!");
 	if (this->database.empty())
 		parseDatabase(this->_db_file);
-	
+	std::ifstream	ifs(in_file);
+	if (!ifs.is_open())
+		throw std::runtime_error("Error: Could not open input file");
+	fail = false;
+	while (std::getline(ifs, line))
+	{
+		if (skip)
+		{
+			skip = false;
+			continue;
+		}
+		if (std::count(line.begin(), line.end(), '|') > 1)
+		{
+			std::cerr << "Error: Too many items " + line << "\n";
+			continue ;
+		}
+		if (std::count(line.begin(), line.end(), '|') < 1 || line[0] == '|' || line[line.length() - 1] == '|')
+		{
+			std::cerr << "Error: Bad input " + line << "\n";
+			continue ;
+		}
+		date = line.substr(0, line.find('|'));
+		amount = line.substr(line.find('|') + 1);
+		try
+		{
+			fail = (!parseDate(date, date) || !parseFloat(amount, f));
+		}
+		catch(std::exception &e)
+		{
+			std::cerr << e.what() << '\n';
+			continue;
+		}
+		if (fail)
+		{
+			std::cerr << "Error: Line has wrong number of elements\n";
+			continue ;
+		}
+		if (!isValidDate(date))
+		{
+			std::cerr << "Error: Incorrect date formatting " << date << "\n";
+			continue ;
+		}
+		it = this->database.find(date);
+		if (it == this->database.end())
+		{
+			it = this->database.lower_bound(date);
+			if (it == this->database.begin())
+			{
+				std::cerr  << "Error: Date earlier than lowerbound\n";
+				continue;
+			}
+			it--;
+		}
+		std::cout << date << " => " << f << " = " << it->second * f << "\n";
+	}
+	ifs.close();
 }
 
 void BitcoinExchange::parseDatabase(str db_file)
 {
 	float	f;
-	bool	fail;
+	bool	fail, skip = true;
 	str		line, date, amount;
 
 	if (!validFileExtension(db_file, ".csv"))
-		throw std::runtime_error("Invalid file extension (" + db_file + ")! Expected extension (.csv)");
+		throw std::runtime_error("Error: Invalid file extension (" + db_file + ")! Expected extension (.csv)");
 	if (!database.empty())
 		database.clear();
 	this->_db_file = db_file;
 	std::ifstream	ifs(db_file);
 	if (!ifs.is_open())
-		throw std::runtime_error("BTS -> Could not open file");
+		throw std::runtime_error("Error: Could not open database file");
 	fail = false;
 	while (std::getline(ifs, line))
 	{
-		fail = (fail || std::count(line.begin(), line.end(), '|') > 1 || line[0] == '|' || line[line.length() - 1] == '|');
+		if (skip)
+		{
+			skip = false;
+			continue;
+		}
+		fail = (fail || std::count(line.begin(), line.end(), ',') > 1 || line[0] == ',' || line[line.length() - 1] == ',');
 		if (fail)
 			continue ;
-		date = line.substr(0, line.find('|'));
-		amount = line.substr(line.find('|') + 1);
+		date = line.substr(0, line.find(','));
+		amount = line.substr(line.find(',') + 1);
 		fail = (!parseDate(date, date) || !parseFloat(amount, f));
+		// fail = (fail || !isValidDate(date));
+		if (!fail)
+			database[date] = f;
 	}
 	ifs.close();
+	if (fail)
+		throw std::runtime_error("Error: Incorrect file formatting");
 }
 
 BitcoinExchange &BitcoinExchange::operator =(const BitcoinExchange &copy)

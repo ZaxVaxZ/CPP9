@@ -36,6 +36,6 @@ int main(int ac, char **av)
 	fordJohnson.sortUsingList();
 	std::cout << "<-> Numbers after sort:\t";
 	fordJohnson.printNumbers();
-	std::cout << "Vector sort time: " << fordJohnson.getVectorTime() << "ms\n";
-	std::cout << "List sort time: " << fordJohnson.getListTime() << "ms\n";
+	std::cout << "Vector sort time: " << fordJohnson.getVectorTime() << " us\n";
+	std::cout << "List sort time: " << fordJohnson.getListTime() << " us\n";
 }
