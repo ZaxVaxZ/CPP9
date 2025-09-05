@@ -26,7 +26,7 @@ void	PmergeMe::fillContainers(char** args)
 {
 	for (int i = 1; args[i]; i++)
 	{
-		if (std::string(args[i]).find_first_not_of("0123456789") != std::string::npos)
+		if (!args[i][0] || std::string(args[i]).find_first_not_of("0123456789") != std::string::npos)
 			throw (std::invalid_argument("Error: Only positive integers allowed in arguments!"));
 		int	argInt = std::atoi(args[i]);
 		if (argInt < 0)
