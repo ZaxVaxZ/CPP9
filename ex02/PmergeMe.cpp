@@ -78,8 +78,6 @@ void	PmergeMe::positionPendElements(std::vector<int>& unsorted_winners, std::vec
 		pendChain.push_back(losers[losers.size() - 1]);
 }
 
-
-
 void	PmergeMe::insertPend(std::vector<int>& pendChain)
 {
 	int					jacobsthalIndex = 3;
@@ -247,10 +245,10 @@ void	PmergeMe::sortUsingVector()
 	unsigned long long	micro_seconds;
 
 	gettimeofday(&t, NULL);
-	micro_seconds = t.tv_sec * 1000ull + t.tv_usec;
+	micro_seconds = t.tv_sec * 1000ull + t.tv_usec / 1000ull;
 	sortVector();
 	gettimeofday(&t, NULL);
-	this->vector_time = t.tv_sec * 1000ull + t.tv_usec - micro_seconds;
+	this->vector_time = t.tv_sec * 1000ull + t.tv_usec / 1000ull - micro_seconds;
 }
 
 long long	PmergeMe::getVectorTime() const
@@ -306,10 +304,10 @@ void	PmergeMe::sortUsingList()
 	unsigned long long	micro_seconds;
 
 	gettimeofday(&t, NULL);
-	micro_seconds = t.tv_sec * 1000ull + t.tv_usec;
+	micro_seconds = t.tv_sec * 1000ull + t.tv_usec / 1000ull;
 	sortList();
 	gettimeofday(&t, NULL);
-	this->list_time = t.tv_sec * 1000ull + t.tv_usec - micro_seconds;
+	this->list_time = t.tv_sec * 1000ull + t.tv_usec / 1000ull - micro_seconds;
 }
 
 long long	PmergeMe::getListTime() const

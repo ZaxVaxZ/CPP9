@@ -30,12 +30,12 @@ int main(int ac, char **av)
 		std::cerr << "<!> " << e.what() << "\n";
 		return (1);
 	}
-	std::cout << "<-> Numbers before sort:\t";
+	std::cout << "<-> Numbers before sort: ";
 	fordJohnson.printNumbers();
 	fordJohnson.sortUsingVector();
 	fordJohnson.sortUsingList();
-	std::cout << "<-> Numbers after sort:\t";
+	std::cout << "<-> Numbers after sort: ";
 	fordJohnson.printNumbers();
-	std::cout << "Vector sort time: " << fordJohnson.getVectorTime() << " us\n";
-	std::cout << "List sort time: " << fordJohnson.getListTime() << " us\n";
+	std::cout << "<-> Vector sort time: " << fordJohnson.getVectorTime() << " ms\n";
+	std::cout << "<-> List sort time: " << fordJohnson.getListTime() << " ms\n";
 }
