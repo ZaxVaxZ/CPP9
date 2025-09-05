@@ -33,8 +33,9 @@ class	PmergeMe
 		std::set<int>			set;
 		unsigned long long		vector_time, list_time;
 
-		void			sortVector();
-		void			sortList();
+		void	sortVector();
+		void	sortList();
+		long	*getSequence(unsigned int n) const;
 
 		// vector utility
 		int		binaryInsertSearch(int _toInsert, size_t capIndex, std::vector<int>& searchVector);
@@ -44,12 +45,10 @@ class	PmergeMe
 			
 		// list utility
 		std::list<int>::iterator	advancedIterator(std::list<int>::iterator iterator, int advanceBy); // this advances iterator by advanceBy
-
-		void	printList(std::list<int>& print);
 		int		binaryInsertSearch(int _toInsert, size_t capIndex, std::list<int>& searchList);
+		void	insertPend(std::list<int>& pendChain);
 		void	positionPendElements(std::list<int>& unsorted_winners, std::list<int>& sorted_winners, 
 										std::list<int>& losers, std::list<int>& pendChain);
-		void	insertPend(std::list<int>& pendChain);
 	
 	public:
 		PmergeMe();
@@ -57,12 +56,9 @@ class	PmergeMe
 		PmergeMe(const PmergeMe& obj);
 
 		void			fillContainers(char** args);
-		int				size();
 		void			sortUsingVector();
 		void			sortUsingList();
 		void			printNumbers();
-		void			printInternalList();
-		long			*getSequence(unsigned int n) const;
 		long long		getVectorTime() const;
 		long long		getListTime() const;
 	

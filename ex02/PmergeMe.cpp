@@ -118,34 +118,6 @@ void	PmergeMe::insertPend(std::vector<int>& pendChain)
 	delete [] jacobsthal;
 }
 
-void	PmergeMe::printList(std::list<int>& print)
-{
-	std::list<int>::iterator it = print.begin();
-	while (1)
-	{
-		std::list<int>::iterator current = it;
-		it++;
-		std::cout << (*current) << ((it) == print.end() ? "" : " ");
-		if (it == print.end())
-			break ;
-	}
-	std::cout << "\n";
-}
-
-void	PmergeMe::printInternalList()
-{
-	std::list<int>::iterator it = this->list.begin();
-	while (1)
-	{
-		std::list<int>::iterator current = it;
-		it++;
-		std::cout << (*current) << ((it) == this->list.end() ? "" : " ");
-		if (it == this->list.end())
-			break ;
-	}
-	std::cout << "\n";
-}
-
 std::list<int>::iterator	PmergeMe::advancedIterator(std::list<int>::iterator iterator, int advanceBy)
 {
 	std::advance(iterator, advanceBy);
