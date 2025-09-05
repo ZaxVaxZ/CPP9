@@ -126,7 +126,7 @@ bool BitcoinExchange::parseFloat(str &line, float &f)
 	}
 	if (negative)
 		throw std::runtime_error("Error: Not a positive number");
-	if (line.length() > 10 || std::stoll(line) > INT_MAX)
+	if (line.length() > 10 || std::atoll(line.c_str()) > INT_MAX)
 		throw std::runtime_error("Error: Too large a number");
 	f = std::atof(line.c_str());
 	return true;
@@ -144,7 +144,7 @@ void BitcoinExchange::parseInput(str in_file)
 		throw std::runtime_error("Error: No database loaded!");
 	if (this->database.empty())
 		parseDatabase(this->_db_file);
-	std::ifstream	ifs(in_file);
+	std::ifstream	ifs(in_file.c_str());
 	if (!ifs.is_open())
 		throw std::runtime_error("Error: Could not open input file");
 	fail = false;
@@ -213,7 +213,7 @@ void BitcoinExchange::parseDatabase(str db_file)
 	if (!database.empty())
 		database.clear();
 	this->_db_file = db_file;
-	std::ifstream	ifs(db_file);
+	std::ifstream	ifs(db_file.c_str());
 	if (!ifs.is_open())
 		throw std::runtime_error("Error: Could not open database file");
 	fail = false;
@@ -224,19 +224,23 @@ void BitcoinExchange::parseDatabase(str db_file)
 			skip = false;
 			continue;
 		}
-		fail = (fail || std::count(line.begin(), line.end(), ',') > 1 || line[0] == ',' || line[line.length() - 1] == ',');
+		if (std::count(line.begin(), line.end(), ',') > 1)
+			throw std::runtime_error("Error: Too many items " + line);
+		if (!fail && (std::count(line.begin(), line.end(), ',') < 1 || line[0] == ',' || line[line.length() - 1] == ','))
+			throw std::runtime_error("Error: Bad input " + line);
 		if (fail)
 			continue ;
 		date = line.substr(0, line.find(','));
 		amount = line.substr(line.find(',') + 1);
 		fail = (!parseDate(date, date) || !parseFloat(amount, f));
-		// fail = (fail || !isValidDate(date));
+		if (!isValidDate(date))
+			throw std::runtime_error("Error: Incorrect date formatting " + date);
 		if (!fail)
 			database[date] = f;
 	}
 	ifs.close();
 	if (fail)
-		throw std::runtime_error("Error: Incorrect file formatting");
+		throw std::runtime_error("Error: Improper data in database.");
 }
 
 BitcoinExchange &BitcoinExchange::operator =(const BitcoinExchange &copy)
