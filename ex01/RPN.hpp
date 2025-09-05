@@ -28,10 +28,11 @@ class RPN
 	public:
 		RPN();
 		RPN(const RPN &copy);
-		RPN &operator =(const RPN &copy);
 		~RPN();
 
 		float	evaluate(char *expression);
+
+		RPN &operator =(const RPN &copy);
 };
 
 #endif
