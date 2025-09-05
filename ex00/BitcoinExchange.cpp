@@ -92,6 +92,13 @@ bool BitcoinExchange::parseDate(str &line, str &s)
 		if (!std::isdigit(line[i]))
 			throw std::runtime_error("Error: Bad date input " + line);
 	}
+	for (size_t i = 10; i < line.length(); i++)
+	{
+		if (line[i] != ' ')
+			throw std::runtime_error("Error: Bad date input " + line);
+	}
+	if (line.length() > 10)
+		line = line.substr(0, 10);
 	return true;
 }
 

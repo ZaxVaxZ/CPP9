@@ -54,6 +54,8 @@ int RPN::parseNum(char **s)
 		if (x > 2147483648 && n == -1)
 			return (0);
 	}
+	if (n == 1 && x > 9)
+		return (0);
 	numbers.push(x * n);
 	return (1);
 }
